@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChattingApp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@600&display=swap" rel="stylesheet">
+    <style>
+        .logo {
+            display: block;
+            margin: auto;
+            width: 50px;
+            height: 50px;
+        }
+
+        body {
+            background-color: #00031a;
+            height: 100vh;
+            font-family: 'Bitter', serif;
+        }
+
+
+        #message-container {
+            max-width: 755px;
+            margin: auto;
+            height: 80vh;
+            margin-top: 20px;
+            overflow-y: auto;
+            padding-bottom: 5px;
+            border-top: 1px solid #3498db;
+        }
+
+        #send-container {
+            max-width: 755px;
+            margin: auto;
+            border-top: 2px #2ecc71;
+        }
+
+        #message-input {
+            width: 78%;
+            height: 38px;
+            border-radius: 25px;
+            background-color: #00031a;
+            padding-left: 15px;
+            color: #2ecc71;
+            border-color: #2ecc71;
+        }
+
+        #message-input:focus {
+    outline-width: 0;
+}
+
+        #send-button {
+            width: 42px;
+            height: 38px;
+            margin-top: 3px;
+            padding: 2px;
+            float: right;
+        }
+
+
+        .message {
+            color: white;
+            margin-top: 3px;
+        }
+
+        .left {
+            float: left;
+            clear: both;
+            border-radius: 30px 30px 30px 10px;
+            padding: 4px;
+            padding-right: 16px;
+            padding-left: 15px;
+            margin-left: 5px;
+            max-width: 75%;
+            color:#2ecc71;
+            border:2px solid #2ecc71;
+            margin: 3px;
+        }
+
+        .right {
+            float: right;
+            clear: both;
+            border-radius: 30px 30px 10px 30px;
+            padding: 4px;
+            padding-left: 11px;
+            padding-right: 15px;
+            margin-right: 5px;
+            max-width: 75%;
+            border:2px solid #3498db;
+            color:#3498db;
+        }
+
+        .mid {
+            font-size: 10px;
+            text-align: center;
+            clear: both;
+            color: aquamarine;
+        }
+
+        #covering{
+            height: 100vh;
+            width: 100%;
+            background-color: black;
+            z-index: 500;
+            display: block;
+            position: absolute;
+            margin: 0px;
+        }
+
+        @media screen and (min-width:760px) {
+            #message-input {
+                width: 90%;
+            }
+
+            #message-container {
+                border-left: 2px solid white;
+                border-right: 2px solid white;
+                margin-bottom: 4px;
+                border-bottom: 1px solid grey;
+            }
+
+        }
+    </style>
+</head>
+<body>
+<div id="covering"></div>
+    <nav>
+        <img class="logo" src="chat.png" alt="logo">
+    </nav>
+    <div id="message-container">
+        <div class="mid">Welcome</div>
+    </div>
+    <div class="send">
+        <form id="send-container">
+            <input type="text" id="message-input" autocomplete="off" maxlength="200" autofocus
+                placeholder="Enter Your Message">
+            <input type="image" src="send.png" id="send-button"></input>
+        </form>
+    </div>
+
+    <script src="http://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+    <script>
+        const socket = io('http://localhost:4000')
+        const messageForm = document.getElementById('send-container')
+        const messageContainer = document.getElementById('message-container')
+        const messageInput = document.getElementById('message-input')
+        var naam =sessionStorage.getItem('userName')
+        
+        if(naam != null){
+            document.getElementById("covering").style.display="none";
+        }
+        
+
+        function updateScroll(){
+        var element = document.getElementById("message-container");
+        element.scrollTop = element.scrollHeight;
+        }
+
+        appendMessage('You Joined', `mid`)
+        socket.emit('new-user', naam)
+
+        socket.on('chat-message', data => {
+            appendMessage(`${data.naam}: ${data.message}`, `left`)
+        })
+
+        socket.on('user-connected', naam => {
+            appendMessage(`${naam} connected`, `mid`)
+        })
+
+        socket.on('user-disconnected', naam => {
+            appendMessage(`${naam} disconnected`, `mid`)
+        })
+
+        messageForm.addEventListener('submit', e => {
+            e.preventDefault()
+            const message = messageInput.value
+            appendMessage(`You: ${message}`, `right`)
+            socket.emit('send-chat-message', message)
+            messageInput.value = ""
+        })
+
+        function appendMessage(message, position) {
+            const messageElement = document.createElement('div')
+            messageElement.innerText = message
+            messageElement.classList.add('message');
+            messageElement.classList.add(position);
+            messageContainer.append(messageElement)
+            updateScroll()
+        }
+    </script>
+</body>
+
+</html>
